@@ -259,8 +259,6 @@ Mesh::decimateQuadricEdgeCollapse()
 {
   DGP_CONSOLE << getName() << ": Mesh has " << numFaces() << " faces, collapsing a single edge";
 
-  // TODO
-
   // The general scheme here is:
   // (1) Loop over edges to find the one with the minimum error (remember to check if the error is negative, in which case the
   //     edge is invalid for collapsing).
@@ -275,7 +273,32 @@ Mesh::decimateQuadricEdgeCollapse()
   //     - Update the quadric collapse error and the optimal collapse position for the edge.
   // (6) Return the vertex.
 
-  return NULL;
+  double min_error = std::numeric_limits<double>::max();
+  Edge *min_edge = NULL;
+
+  for (auto &e : edges)
+  { 
+    if (e.getQuadricCollapseError() > 0 and e.getQuadricCollapseError() < min_error)
+      min_error = e.getQuadricCollapseError(), min_edge = &e;
+  }
+
+  if (min_edge == NULL) return NULL;
+
+  auto v = collapseEdge(min_edge);
+
+  for (auto &f : v->faces)
+      f->updateNormal();
+
+  v->updateQuadric();
+  v->updateNormal();
+
+  for (auto &e : v->edges)
+  {
+    e->updateQuadricCollapseError();
+    e->getOtherEndpoint(v)->updateQuadric();
+  }
+
+  return v;
 }
 
 void
