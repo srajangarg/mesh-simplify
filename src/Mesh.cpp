@@ -8,6 +8,17 @@
 #include <fstream>
 #include <unordered_map>
 
+void
+Mesh::remove_from_heap(std::multiset<Edge*, EdgeComp>& eh, Edge* e)
+{
+  auto pp = eh.equal_range(e);
+  std::multiset<Edge*, EdgeComp>::iterator tod;
+  for (auto it = pp.first; it != pp.second; it++)
+    if (*it == e)
+      tod = it;
+  eh.erase(tod);
+}
+
 MeshEdge *
 Mesh::mergeEdges(Edge * e0, Edge * e1)
 {
@@ -45,6 +56,7 @@ Mesh::mergeEdges(Edge * e0, Edge * e1)
     for (EdgeIterator ej = edges.begin(); ej != edges.end(); ++ej)
       if (&(*ej) == edges_to_remove[i])
       {
+        remove_from_heap(edge_heap, &(*ej));
         edges.erase(ej);
         break;
       }
@@ -200,6 +212,7 @@ Mesh::collapseEdge(Edge * edge)
   for (EdgeIterator ei = edges.begin(); ei != edges.end(); ++ei)
     if (&(*ei) == edge)
     {
+      remove_from_heap(edge_heap, &(*ei));
       edges.erase(ei);
       break;
     }
@@ -273,18 +286,23 @@ Mesh::decimateQuadricEdgeCollapse()
   //     - Update the quadric collapse error and the optimal collapse position for the edge.
   // (6) Return the vertex.
 
-  double min_error = std::numeric_limits<double>::max();
-  Edge *min_edge = NULL;
-
-  for (auto &e : edges)
-  { 
-    if (e.getQuadricCollapseError() > 0 and e.getQuadricCollapseError() < min_error)
-      min_error = e.getQuadricCollapseError(), min_edge = &e;
+  if (not heap_constructed)
+  {
+    for (auto &e : edges)
+      edge_heap.insert(&e);
+    heap_constructed = true;
+    assert(edge_heap.size() == edges.size());
   }
 
-  if (min_edge == NULL) return NULL;
+  Edge *min_edge = NULL;
+
+  if (edge_heap.begin() != edge_heap.end())
+    min_edge = *edge_heap.begin();
+  else
+    return NULL;
 
   auto v = collapseEdge(min_edge);
+  v->setPosition(min_edge->getQuadricCollapsePosition());
 
   for (auto &f : v->faces)
       f->updateNormal();
@@ -294,8 +312,11 @@ Mesh::decimateQuadricEdgeCollapse()
 
   for (auto &e : v->edges)
   {
-    e->updateQuadricCollapseError();
+    remove_from_heap(edge_heap, e);
     e->getOtherEndpoint(v)->updateQuadric();
+    e->getOtherEndpoint(v)->updateNormal();
+    e->updateQuadricCollapseError();
+    edge_heap.insert(e);
   }
 
   return v;

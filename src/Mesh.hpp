@@ -14,6 +14,7 @@
 #include <list>
 #include <type_traits>
 #include <vector>
+#include <set>
 
 /** A class for storing meshes with arbitrary topologies. */
 class Mesh : public virtual NamedObject, private Noncopyable
@@ -295,6 +296,16 @@ class Mesh : public virtual NamedObject, private Noncopyable
       }
     }
 
+    struct EdgeComp
+    {
+      bool operator()(const Edge* lhs, const Edge* rhs) const
+      {
+        return lhs->getQuadricCollapseError() < rhs->getQuadricCollapseError();
+      }
+    };
+
+    void remove_from_heap(std::multiset<Edge*, EdgeComp>& eh, Edge* e);
+
     /** If two edges of the mesh have the same endpoints, merge them into a single edge, which is returned by the function. */
     Edge * mergeEdges(Edge * e0, Edge * e1);
 
@@ -310,6 +321,9 @@ class Mesh : public virtual NamedObject, private Noncopyable
     AxisAlignedBox3  bounds;    ///< Mesh bounding box.
 
     mutable std::vector<Vertex *> face_vertices;  ///< Internal cache of vertex pointers for a face.
+
+    std::multiset<Edge*, EdgeComp> edge_heap;
+    bool heap_constructed = false;
 
 }; // class Mesh
 

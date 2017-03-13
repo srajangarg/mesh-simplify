@@ -48,8 +48,6 @@ MeshEdge::updateQuadricCollapseError()
   }
   else
   {
-    // quadric_collapse_error = -1;
-    // return;
     v = Vector4(endpoints[0]->getPosition() + endpoints[1]->getPosition()/2.0, 1);
   }
 
