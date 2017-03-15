@@ -53,13 +53,7 @@ Mesh::mergeEdges(Edge * e0, Edge * e1)
     edges_to_remove[i]->getEndpoint(0)->removeEdge(edges_to_remove[i]);
     edges_to_remove[i]->getEndpoint(1)->removeEdge(edges_to_remove[i]);
 
-    for (EdgeIterator ej = edges.begin(); ej != edges.end(); ++ej)
-      if (&(*ej) == edges_to_remove[i])
-      {
-        remove_from_heap(edge_heap, &(*ej));
-        edges.erase(ej);
-        break;
-      }
+    remove_from_heap(edge_heap, edges_to_remove[i]);
   }
 
   Vertex * vertices_to_remove[2] = { NULL, NULL };
@@ -209,13 +203,7 @@ Mesh::collapseEdge(Edge * edge)
 
   // No faces reference v any more. The mesh is in a consistent state.
 
-  for (EdgeIterator ei = edges.begin(); ei != edges.end(); ++ei)
-    if (&(*ei) == edge)
-    {
-      remove_from_heap(edge_heap, &(*ei));
-      edges.erase(ei);
-      break;
-    }
+  remove_from_heap(edge_heap, edge);
 
   u->removeEdge(edge);
 
