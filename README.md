@@ -1,5 +1,9 @@
 ## Mesh Simplification with Quadirc Errors
 
+I implemented a surface simplification algorithm which produces high quality approximations
+of polygonal meshes. It uses iterative contractions of vertex pairs which minimize a quadric error metric, to
+produce simplified meshes with high resemblance to the original. Based on the paper by M. Garland et al.
+
 ## Sample Results
 
 We decimate edges to reduce the number of faces in these three examples. The number of faces is each shape is mentioned.
